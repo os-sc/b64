@@ -22,9 +22,11 @@ uint32_t fsize(const char* filename) {
 uint32_t base64_required_buffer_size(uint32_t file_len)
 {
     uint32_t add = 0;
-    if (file_len % 3 == 0)
+    if (file_len % 3 != 0)
         add = 1;
-    return (file_len + add) / 3 * 4;
+    
+    // Don't forget to add 1 for NULL terminator at the end
+    return (file_len + add) / 3 * 4 + 1;
 }
 
 char* base64_encode_block(char* block, uint32_t len)
