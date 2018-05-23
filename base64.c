@@ -5,9 +5,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-uint32_t fsize(const char* filename) {
-    // https://stackoverflow.com/a/8384
-
+uint32_t fsize(const char* filename)
+{
+    // Take from https://stackoverflow.com/a/8384
     struct stat st;
 
     if (stat(filename, &st) == 0)
