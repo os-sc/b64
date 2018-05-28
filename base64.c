@@ -5,9 +5,11 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#define DEBUG 1
+
 uint32_t fsize(const char* filename)
 {
-    // Take from https://stackoverflow.com/a/8384
+    // Taken from https://stackoverflow.com/a/8384
     struct stat st;
 
     if (stat(filename, &st) == 0)
@@ -19,7 +21,7 @@ uint32_t fsize(const char* filename)
     return -1;
 }
 
-uint32_t base64_required_buffer_size(uint32_t file_len)
+uint32_t calc_required_buffer_size(uint32_t file_len)
 {
     uint32_t add = 0;
     if (file_len % 3 == 0)
@@ -42,10 +44,6 @@ char* base64_encode_block(char* block, uint32_t len)
     };
 
     uint32_t index;
-    if (len == 1)
-        block[2] = '\0';
-    if (len <= 2)
-        block[3] = '\0';
 
     // Split the three bytes into 4 six-bit chunks
     // Take the first six bits of the first byte
@@ -80,19 +78,23 @@ char* base64_encode_block(char* block, uint32_t len)
 char* base64_encode_file(const char* filename)
 {
     FILE* file = fopen(filename, "r");
-    char* output = malloc(
-            base64_required_buffer_size(fsize(filename)));
     uint32_t out_index = 0;
+    char* output = malloc(
+            calc_required_buffer_size(fsize(filename)));
+
     size_t len;
     do {
         char block[3] = {0};
         len = fread(block, 1, sizeof(block), file);
+        if (!len) break;
 
         char* enc_block = base64_encode_block(block, len);
-        output[out_index]   = enc_block[0];
-        output[out_index+1] = enc_block[1];
-        output[out_index+2] = enc_block[2];
-        output[out_index+3] = enc_block[3];
+        if (DEBUG)
+            printf("[%d] %02x %02x %02x => %02x %02x %02x %02x\n",
+                    out_index, block[0] &0xFF, block[1] &0xFF, block[2] &0xFF,
+                    enc_block[0] &0xFF, enc_block[1] &0xFF, enc_block[2] &0xFF, enc_block[3] &0xFF);
+
+        memcpy(&output[out_index], enc_block, 4);
         out_index += 4;
     } while (len == 3);
     output[out_index] = '\0';
