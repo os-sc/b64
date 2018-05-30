@@ -98,6 +98,7 @@ char* base64_encode_file(const char* filename)
         out_index += 4;
     } while (len == 3);
     output[out_index] = '\0';
+    fclose(file);
     return output;
 }
 
